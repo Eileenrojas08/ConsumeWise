@@ -3,6 +3,12 @@ package smartfoodmanager.ui;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.util.Duration;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -14,6 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+
 
 import smartfoodmanager.db.DatabaseManager;
 import smartfoodmanager.db.FoodItemDAO;
@@ -38,25 +45,56 @@ public class FoodApp extends Application {
     private final ShoppingListDAO shoppingDao = new ShoppingListDAO();
 
     private BorderPane root;
+    private VBox sidebar;
+    private boolean sidebarOpen = true;
+    private final DoubleProperty sidebarWidth = new SimpleDoubleProperty(250);
+    private static final double SIDEBAR_OPEN_WIDTH = 250;
+    private static final double SIDEBAR_CLOSED_WIDTH = 0;
+
     private final List<Button> navButtons = new ArrayList<>();
 
     @Override
-    public void start(Stage stage) {
-        DatabaseManager.createTables();
-        root = new BorderPane();
-        buildSidebar();
-        navigateTo(0);
-        Scene scene = new Scene(root, 1220, 760);
-        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-        stage.setTitle("ConsumeWise");
-        stage.setScene(scene);
-        stage.show();
-    }
+public void start(Stage stage) {
+    DatabaseManager.createTables();
+    root = new BorderPane();
+    buildSidebar();
+    navigateTo(0);
+
+    // Floating hamburger button - sits ON TOP of the content, not in a bar.
+    Button hamburger = new Button("\u2630");
+    hamburger.getStyleClass().add("hamburger-btn");
+    hamburger.setOnAction(e -> toggleSidebar());
+
+    // Its horizontal position is glued to the sidebar's current width,
+    // so it slides left automatically as the sidebar collapses/expands.
+    hamburger.translateXProperty().bind(sidebarWidth);
+
+    StackPane overlay = new StackPane(root, hamburger);
+    StackPane.setAlignment(hamburger, Pos.TOP_LEFT);
+    StackPane.setMargin(hamburger, new Insets(16, 0, 0, 16));
+
+    Scene scene = new Scene(overlay, 1220, 760);
+    scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+    stage.setTitle("ConsumeWise");
+    stage.setScene(scene);
+    stage.show();
+}
+
+private void toggleSidebar() {
+    double target = sidebarOpen ? SIDEBAR_CLOSED_WIDTH : SIDEBAR_OPEN_WIDTH;
+    Timeline timeline = new Timeline(
+            new KeyFrame(Duration.millis(250), new KeyValue(sidebarWidth, target))
+    );
+    timeline.play();
+    sidebarOpen = !sidebarOpen;
+}
 
     private void buildSidebar() {
-        VBox sidebar = new VBox(6);
+        sidebar = new VBox(6);
         sidebar.getStyleClass().add("sidebar");
-
+        sidebar.prefWidthProperty().bind(sidebarWidth);
+        sidebar.minWidthProperty().bind(sidebarWidth);
+        sidebar.maxWidthProperty().bind(sidebarWidth);
         Label logo = new Label("\uD83C\uDF43");
         logo.getStyleClass().add("logo-square");
         Label title = new Label("ConsumeWise");
@@ -85,17 +123,7 @@ public class FoodApp extends Application {
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        Label statusLabel = new Label("\u25CF  SQLite \u00B7 Connected");
-        statusLabel.getStyleClass().add("sidebar-status");
-        statusLabel.setMaxWidth(Double.MAX_VALUE);
-
-        Button exitBtn = new Button("\u2715  Exit Application");
-        exitBtn.getStyleClass().add("sidebar-exit");
-        exitBtn.setMaxWidth(Double.MAX_VALUE);
-        exitBtn.setOnAction(e -> Platform.exit());
-
-        VBox footer = new VBox(8, statusLabel, exitBtn);
-        sidebar.getChildren().addAll(logoBox, navBox, spacer, footer);
+        sidebar.getChildren().addAll(logoBox, navBox, spacer);
         root.setLeft(sidebar);
     }
 
