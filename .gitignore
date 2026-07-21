@@ -1,5 +1,4 @@
 bin/
 lib/javafx-sdk-21.0.6/
 *.class
-smartfoodmanager.db
 .vscode/

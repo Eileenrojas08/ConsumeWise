@@ -20,6 +20,14 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.animation.PauseTransition;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
+import javafx.scene.input.InputEvent;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.KeyCode;
+import java.io.File;
 
 
 import smartfoodmanager.db.DatabaseManager;
@@ -52,32 +60,121 @@ public class FoodApp extends Application {
     private static final double SIDEBAR_CLOSED_WIDTH = 0;
 
     private final List<Button> navButtons = new ArrayList<>();
+    private Stage stage;
+private StackPane rootStack;
+private boolean screensaverShowing = false;
+private static final int IDLE_SECONDS = 60;
 
-    @Override
+@Override
 public void start(Stage stage) {
+    this.stage = stage;
+    stage.setTitle("ConsumeWise");
+    showStartupVideo();
+}
+
+private void showMainApp() {
     DatabaseManager.createTables();
     root = new BorderPane();
     buildSidebar();
     navigateTo(0);
 
-    // Floating hamburger button - sits ON TOP of the content, not in a bar.
     Button hamburger = new Button("\u2630");
     hamburger.getStyleClass().add("hamburger-btn");
     hamburger.setOnAction(e -> toggleSidebar());
-
-    // Its horizontal position is glued to the sidebar's current width,
-    // so it slides left automatically as the sidebar collapses/expands.
     hamburger.translateXProperty().bind(sidebarWidth);
 
-    StackPane overlay = new StackPane(root, hamburger);
+    rootStack = new StackPane(root, hamburger);
     StackPane.setAlignment(hamburger, Pos.TOP_LEFT);
     StackPane.setMargin(hamburger, new Insets(16, 0, 0, 16));
 
-    Scene scene = new Scene(overlay, 1220, 760);
+    Scene scene = new Scene(rootStack, 1220, 760);
     scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-    stage.setTitle("ConsumeWise");
     stage.setScene(scene);
     stage.show();
+
+    setupIdleTimer(scene);
+}
+
+private void showStartupVideo() {
+    try {
+        Media media = new Media(new File("video/startup.mp4").toURI().toString());
+        MediaPlayer player = new MediaPlayer(media);
+        player.setCycleCount(1);
+        player.setRate(1.5);   // speeds a 23s clip to ~15s
+
+        MediaView view = new MediaView(player);
+        view.setPreserveRatio(true);
+        view.setFitWidth(1220);
+
+        Label title = new Label("ConsumeWise");
+        title.setStyle("-fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label tagline = new Label("Manage what you have. Use it before you lose it.");
+        tagline.setStyle("-fx-font-size: 16px; -fx-text-fill: #EEEEEE;");
+        Label hint = new Label("click to continue");
+        hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #BBBBBB;");
+
+        VBox textCard = new VBox(10, title, tagline, hint);
+        textCard.setAlignment(Pos.CENTER);
+        textCard.setStyle("-fx-background-color: rgba(0,0,0,0.55);"
+                        + "-fx-background-radius: 18; -fx-padding: 28 40 28 40;");
+        textCard.setMaxWidth(560);
+        textCard.setMaxHeight(Region.USE_PREF_SIZE);
+
+        StackPane splash = new StackPane(view, textCard);
+        splash.setStyle("-fx-background-color: black;");
+
+        Scene scene = new Scene(splash, 1220, 760);
+        stage.setScene(scene);
+        stage.show();
+
+        player.setOnEndOfMedia(() -> { player.stop(); showMainApp(); });
+        splash.setOnMouseClicked(e -> { player.stop(); showMainApp(); });
+        scene.setOnKeyPressed(e -> { player.stop(); showMainApp(); });
+
+        player.play();
+    } catch (Exception ex) {
+        // if the video is missing or won't load, just open the app
+        System.out.println("Startup video failed: " + ex.getMessage());
+        showMainApp();
+    }
+}
+
+private void setupIdleTimer(Scene scene) {
+    PauseTransition idle = new PauseTransition(Duration.seconds(IDLE_SECONDS));
+    idle.setOnFinished(e -> showScreensaver());
+    scene.addEventFilter(InputEvent.ANY, e -> idle.playFromStart());
+    scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+        if (e.getCode() == KeyCode.F5) showScreensaver();
+    });
+    idle.play();
+}
+
+private void showScreensaver() {
+    if (screensaverShowing) return;
+    try {
+        Media media = new Media(new File("video/idle.mp4").toURI().toString());
+        MediaPlayer player = new MediaPlayer(media);
+        player.setCycleCount(MediaPlayer.INDEFINITE);
+
+        MediaView view = new MediaView(player);
+        view.setPreserveRatio(true);
+        view.fitWidthProperty().bind(rootStack.widthProperty());
+
+        StackPane cover = new StackPane(view);
+        cover.setStyle("-fx-background-color: black;");
+        cover.setOnMouseClicked(e -> {
+            player.stop();
+            rootStack.getChildren().remove(cover);
+            screensaverShowing = false;
+        });
+
+        screensaverShowing = true;
+        rootStack.getChildren().add(cover);
+        player.play();
+    } catch (Exception ex) {
+        System.out.println("Idle video failed: " + ex.getMessage());
+        screensaverShowing = false;
+    }
 }
 
 private void toggleSidebar() {
