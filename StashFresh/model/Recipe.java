@@ -1,4 +1,4 @@
-package smartfoodmanager.model;
+package StashFresh.model;
 
 import java.util.ArrayList;
 import java.util.List;

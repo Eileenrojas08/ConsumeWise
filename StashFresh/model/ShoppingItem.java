@@ -1,4 +1,4 @@
-package smartfoodmanager.model;
+package StashFresh.model;
 
 public class ShoppingItem {
 

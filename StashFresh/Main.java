@@ -1,10 +1,10 @@
-package smartfoodmanager;
-
-import smartfoodmanager.db.DatabaseManager;
-import smartfoodmanager.db.FoodItemDAO;
-import smartfoodmanager.model.FoodItem;
+package StashFresh;
 
 import java.util.List;
+
+import StashFresh.db.DatabaseManager;
+import StashFresh.db.FoodItemDAO;
+import StashFresh.model.FoodItem;
 
 /**
  * Temporary test driver. NO GUI. Its only job today is to prove the

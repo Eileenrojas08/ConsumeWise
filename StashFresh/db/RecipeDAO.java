@@ -1,6 +1,4 @@
-package smartfoodmanager.db;
-
-import smartfoodmanager.model.Recipe;
+package StashFresh.db;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -10,6 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import StashFresh.model.Recipe;
 
 public class RecipeDAO {
 

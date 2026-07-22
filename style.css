@@ -703,3 +703,40 @@
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(35,16,70,0.15), 10, 0.05, 0, 3);
 }
+
+.food-card {
+    -fx-background-radius: 16;
+    -fx-background-color: radial-gradient(center 50% 40%, radius 75%,
+        #232A2B 0%, #1A2021 60%, #141819 100%);
+    -fx-cursor: hand;
+}
+
+.food-card:pressed {
+    -fx-background-color: radial-gradient(center 50% 40%, radius 75%,
+        #2E3639 0%, #232A2B 60%, #1A1F20 100%);
+}
+
+.food-card-label {
+    -fx-text-fill: #E8EAE6;
+    -fx-font-size: 16px;      /* was 13 */
+    -fx-font-weight: bold;
+}
+
+.btn-primary {
+    -fx-background-color: #6FD69B;
+    -fx-text-fill: #10231A;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-radius: 20;
+    -fx-padding: 10 28;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(111,214,155,0.35), 12, 0, 0, 2);
+}
+.btn-primary:hover {
+    -fx-background-color: #86E3AF;
+    -fx-effect: dropshadow(gaussian, rgba(111,214,155,0.6), 18, 0, 0, 3);
+}
+.btn-primary:pressed {
+    -fx-background-color: #57BC83;
+}
+

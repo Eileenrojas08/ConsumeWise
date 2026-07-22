@@ -1,4 +1,4 @@
-package smartfoodmanager.ui;
+package StashFresh.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -28,21 +28,19 @@ import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
 import java.io.File;
-
-
-import smartfoodmanager.db.DatabaseManager;
-import smartfoodmanager.db.FoodItemDAO;
-import smartfoodmanager.db.RecipeDAO;
-import smartfoodmanager.db.ShoppingListDAO;
-import smartfoodmanager.model.FoodItem;
-import smartfoodmanager.model.Recipe;
-import smartfoodmanager.model.ShoppingItem;
-
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import StashFresh.db.DatabaseManager;
+import StashFresh.db.FoodItemDAO;
+import StashFresh.db.RecipeDAO;
+import StashFresh.db.ShoppingListDAO;
+import StashFresh.model.FoodItem;
+import StashFresh.model.Recipe;
+import StashFresh.model.ShoppingItem;
 
 public class FoodApp extends Application {
 
@@ -68,8 +66,15 @@ private static final int IDLE_SECONDS = 60;
 @Override
 public void start(Stage stage) {
     this.stage = stage;
-    stage.setTitle("ConsumeWise");
+    stage.setTitle("StashFresh");
     showStartupVideo();
+}
+
+private void showPickScreen() {
+    PickFoodScreen pick = new PickFoodScreen(this::showMainApp);
+    Scene scene = new Scene(pick.build(), 1220, 760);
+    scene.getStylesheets().add("file:style.css");
+    stage.setScene(scene);
 }
 
 private void showMainApp() {
@@ -105,13 +110,15 @@ private void showStartupVideo() {
         MediaView view = new MediaView(player);
         view.setPreserveRatio(true);
         view.setFitWidth(1220);
+        view.setMouseTransparent(true);
 
-        Label title = new Label("ConsumeWise");
+        Label title = new Label("StashFresh");
         title.setStyle("-fx-font-size: 40px; -fx-font-weight: bold; -fx-text-fill: white;");
         Label tagline = new Label("Manage what you have. Use it before you lose it.");
         tagline.setStyle("-fx-font-size: 16px; -fx-text-fill: #EEEEEE;");
-        Label hint = new Label("click to continue");
-        hint.setStyle("-fx-font-size: 12px; -fx-text-fill: #BBBBBB;");
+        Button hint = new Button("click to continue");
+        hint.getStyleClass().add("btn-primary");
+        hint.setOnAction(e -> { player.stop(); showPickScreen(); });
 
         VBox textCard = new VBox(10, title, tagline, hint);
         textCard.setAlignment(Pos.CENTER);
@@ -124,19 +131,21 @@ private void showStartupVideo() {
         splash.setStyle("-fx-background-color: black;");
 
         Scene scene = new Scene(splash, 1220, 760);
+        scene.getStylesheets().add("file:style.css");
         stage.setScene(scene);
         stage.show();
 
-        player.setOnEndOfMedia(() -> { player.stop(); showMainApp(); });
-        splash.setOnMouseClicked(e -> { player.stop(); showMainApp(); });
-        scene.setOnKeyPressed(e -> { player.stop(); showMainApp(); });
+        player.setOnEndOfMedia(() -> { player.stop(); showPickScreen(); });
+        splash.setOnMouseClicked(e -> { player.stop(); showPickScreen(); });
+        scene.setOnKeyPressed(e -> { player.stop(); showPickScreen(); });
 
         player.play();
-    } catch (Exception ex) {
-        // if the video is missing or won't load, just open the app
-        System.out.println("Startup video failed: " + ex.getMessage());
-        showMainApp();
-    }
+        } catch (Exception ex) {
+            System.out.println("Startup video failed: " + ex);
+            System.out.println("Looking for: " + new File("video/startup.mp4").getAbsolutePath());
+            ex.printStackTrace();
+            showMainApp();
+        }
 }
 
 private void setupIdleTimer(Scene scene) {
